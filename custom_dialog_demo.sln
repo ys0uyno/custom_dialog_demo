@@ -1,7 +1,31 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "start", "start\start.vcxproj", "{76032E51-7A8C-42E8-9332-5230A8800841}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mfc_dialog", "mfc_dialog\mfc_dialog.vcxproj", "{D65A953E-5F7D-4F02-8C12-9476BD4356C5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hook_mfc_dialog", "hook_mfc_dialog\hook_mfc_dialog.vcxproj", "{2B258931-9BEC-45EF-9AC4-2952ECE3E050}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{76032E51-7A8C-42E8-9332-5230A8800841}.Debug|Win32.ActiveCfg = Debug|Win32
+		{76032E51-7A8C-42E8-9332-5230A8800841}.Debug|Win32.Build.0 = Debug|Win32
+		{76032E51-7A8C-42E8-9332-5230A8800841}.Release|Win32.ActiveCfg = Release|Win32
+		{76032E51-7A8C-42E8-9332-5230A8800841}.Release|Win32.Build.0 = Release|Win32
+		{D65A953E-5F7D-4F02-8C12-9476BD4356C5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D65A953E-5F7D-4F02-8C12-9476BD4356C5}.Debug|Win32.Build.0 = Debug|Win32
+		{D65A953E-5F7D-4F02-8C12-9476BD4356C5}.Release|Win32.ActiveCfg = Release|Win32
+		{D65A953E-5F7D-4F02-8C12-9476BD4356C5}.Release|Win32.Build.0 = Release|Win32
+		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Debug|Win32.Build.0 = Debug|Win32
+		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Release|Win32.ActiveCfg = Release|Win32
+		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
