@@ -86,6 +86,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		return -1;
 	}
 
+	WaitForSingleObject(pi.hProcess, 2000);
+
 	beg_hook();
 	getchar();
 	end_hook();
