@@ -8,6 +8,9 @@
 #define new DEBUG_NEW
 #endif
 
+HINSTANCE g_hinstance = NULL;
+HHOOK g_hhook1 = NULL;
+
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
 //		any functions exported from this DLL which call into
@@ -60,4 +63,47 @@ BOOL Chook_mfc_dialogApp::InitInstance()
 	CWinApp::InitInstance();
 
 	return TRUE;
+}
+
+LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	CWPSTRUCT *p = (CWPSTRUCT *)lParam;
+	LPDRAWITEMSTRUCT lpDrawItemStruct = (LPDRAWITEMSTRUCT)p->lParam;
+
+	switch (p->message)
+	{
+	case WM_SIZE:
+		{
+			OutputDebugString(L"WM_SIZE hook");
+			break;
+		}
+	}
+
+	return CallNextHookEx(g_hhook1, nCode, wParam, lParam);
+}
+
+extern "C" __declspec(dllexport) void BegDialogHook()
+{
+	HWND hwnd = FindWindow(NULL, L"mfc_dialog");
+	if (NULL == hwnd)
+	{
+		OutputDebugString(L"FindWindow failed");
+		return;
+	}
+
+	DWORD tid = GetWindowThreadProcessId(hwnd, NULL);
+	if (0 == tid)
+	{
+		OutputDebugString(L"GetWindowThreadProcessId return 0");
+		return;
+	}
+
+	g_hinstance = GetModuleHandle(L"hook_mfc_dialog.dll");
+	g_hhook1 = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, g_hinstance, tid);
+}
+
+extern "C" __declspec(dllexport) void EndDialogHook()
+{
+	if (NULL != g_hhook1)
+		UnhookWindowsHookEx(g_hhook1);
 }
