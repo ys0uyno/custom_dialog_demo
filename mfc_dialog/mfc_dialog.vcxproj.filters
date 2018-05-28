@@ -22,6 +22,9 @@
     <None Include="res\mfc_dialog.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="splash.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mfc_dialog.h">

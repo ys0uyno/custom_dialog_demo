@@ -97,6 +97,7 @@
     <None Include="ReadMe.txt" />
     <None Include="res\mfc_dialog.ico" />
     <None Include="res\mfc_dialog.rc2" />
+    <None Include="splash.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mfc_dialog.h" />

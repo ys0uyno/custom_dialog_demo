@@ -75,6 +75,8 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (g_once)
 	{
+		g_once = FALSE;
+
 		TCHAR sz[MAX_PATH] = {0};
 
 		HWND hwnd = FindWindow(NULL, TARGET_WND);
@@ -101,7 +103,13 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 		SetWindowLong(hwnd, GWL_STYLE, lstyle);
 		OutputDebugString(L"SetWindowLong done");
 
-		g_once = FALSE;
+		// round rectangle
+		RECT rect;
+		HRGN hrgn;
+		GetWindowRect(hwnd, &rect);
+		hrgn = CreateRoundRectRgn(0, 0, rect.right - rect.left, rect.bottom - rect.top,
+			(rect.right - rect.left) / 16, (rect.bottom - rect.top) / 16);
+		SetWindowRgn(hwnd, hrgn, TRUE);
 	}
 
 	CWPSTRUCT *p = (CWPSTRUCT *)lParam;
@@ -151,6 +159,7 @@ LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 		PostMessage(g_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, p->lParam);
 		break;
 	}
+
 	return CallNextHookEx(g_hhook2, nCode, wParam, lParam);
 }
 
