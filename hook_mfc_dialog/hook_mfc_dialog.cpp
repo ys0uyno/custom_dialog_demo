@@ -132,25 +132,22 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 			WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_WINDOWEDGE);*/
 
 		// round rectangle
-		RECT window_rect;
 		HRGN hrgn;
-		GetWindowRect(hwnd, &window_rect);
+		RECT client_rect;
+		GetClientRect(hwnd, &client_rect);
 		hrgn = CreateRoundRectRgn(
 			0,
 			0,
-			window_rect.right - window_rect.left,
-			window_rect.bottom - window_rect.top,
-			(window_rect.right - window_rect.left) / 16,
-			(window_rect.bottom - window_rect.top) / 16
+			client_rect.right - client_rect.left,
+			client_rect.bottom - client_rect.top,
+			16,
+			16
 			);
 		SetWindowRgn(hwnd, hrgn, TRUE);
 
 		// draw minimize and close button
-		RECT client_rect;
-		GetClientRect(hwnd, &client_rect);
-
 		g_hwnd_minimize = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-			client_rect.right - 32 * 2,
+			client_rect.right - 32 * 2 - 4,
 			client_rect.top,
 			32,
 			32,
@@ -160,7 +157,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 			NULL);
 
 		g_hwnd_close = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-			client_rect.right - 32 * 1,
+			client_rect.right - 32 * 1 - 4,
 			client_rect.top,
 			32,
 			32,
@@ -194,22 +191,29 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
+	case WM_ERASEBKGND:
+		{
+			TCHAR sz[MAX_PATH] = {0};
+			_stprintf_s(sz, L"WM_ERASEBKGND hwnd: %x", p->hwnd);
+			OutputDebugString(sz);
+		}
+		break;
 	case WM_DRAWITEM:
 		{
 			Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 			ULONG_PTR gdiplusToken;
 			GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-			// SetBkMode(pdis->hDC, TRANSPARENT);
+			SetBkMode(pdis->hDC, TRANSPARENT);
 			FillRect(pdis->hDC, &pdis->rcItem, NULL);
-			FrameRect(pdis->hDC, &pdis->rcItem, (HBRUSH)GetStockObject(BLACK_BRUSH));
+			FrameRect(pdis->hDC, &pdis->rcItem, (HBRUSH)GetStockObject(NULL_BRUSH));
 
 			switch(pdis->CtlID)
 			{
 			case IDC_BUTTON_MINIMIZE:
 				{
 					Gdiplus::Graphics graphics(pdis->hDC);
-					Gdiplus::Rect grect(0, 0, 40, 30);
+					/*Gdiplus::Rect grect(0, 0, 40, 30);
 					Gdiplus::Color gcolor[] =
 					{
 						Gdiplus::Color(247, 251, 255),
@@ -224,7 +228,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 						0.666666f,
 						1.0f
 					};
-					fill_rect(pdis->hDC, grect, gcolor, position, sizeof(position) / sizeof(position[0]));
+					fill_rect(pdis->hDC, grect, gcolor, position, sizeof(position) / sizeof(position[0]));*/
 
 					Gdiplus::SolidBrush gbrush(Gdiplus::Color(255, 0, 0, 0));
 					Gdiplus::PointF point1(11.0f, 17.0f);
@@ -238,7 +242,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 			case IDC_BUTTON_CLOSE:
 				{
 					Gdiplus::Graphics graphics(pdis->hDC);
-					Gdiplus::Rect grect(0, 0, 40, 30);
+					/*Gdiplus::Rect grect(0, 0, 40, 30);
 					Gdiplus::Color gcolor[] =
 					{
 						Gdiplus::Color(247, 251, 255),
@@ -253,7 +257,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 						0.666666f,
 						1.0f
 					};
-					fill_rect(pdis->hDC, grect, gcolor, position, sizeof(position) / sizeof(position[0]));
+					fill_rect(pdis->hDC, grect, gcolor, position, sizeof(position) / sizeof(position[0]));*/
 
 					Gdiplus::SolidBrush gbrush(Gdiplus::Color(255, 0, 0, 0));
 					Gdiplus::PointF point1(11.0f, 13.0f);
