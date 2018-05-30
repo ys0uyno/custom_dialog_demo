@@ -16,6 +16,8 @@
 #define IDC_BUTTON_MINIMIZE 1101
 #define IDC_BUTTON_CLOSE 1102
 
+#define CORNER_SIZE 2
+
 HINSTANCE g_hinstance = NULL;
 HHOOK g_hhook1 = NULL;
 HHOOK g_hhook2 = NULL;
@@ -122,9 +124,9 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_ERASEBKGND:
 		{
-			TCHAR sz[MAX_PATH] = {0};
+			/*TCHAR sz[MAX_PATH] = {0};
 			_stprintf_s(sz, L"WM_ERASEBKGND hwnd: %x", p->hwnd);
-			OutputDebugString(sz);
+			OutputDebugString(sz);*/
 		}
 		break;
 	case WM_DRAWITEM:
@@ -231,6 +233,90 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
+	case WM_PAINT:
+		{
+			HDC hdc = ::GetDC(g_hwnd);
+			CDC	*pDC = CDC::FromHandle(hdc);
+
+			RECT rect;
+			GetClientRect(g_hwnd, &rect);
+
+			// outside of window border
+			CPen *old_pen = NULL;
+			CPen new_pen1(PS_SOLID, 1, RGB(27, 147, 186));
+			old_pen = pDC->SelectObject(&new_pen1);
+
+			pDC->MoveTo(rect.left, CORNER_SIZE);
+			pDC->LineTo(CORNER_SIZE, rect.top);
+			pDC->LineTo(rect.right - CORNER_SIZE - 1, rect.top);
+			pDC->LineTo(rect.right - 1, CORNER_SIZE);
+			pDC->LineTo(rect.right - 1, rect.bottom - CORNER_SIZE - 1);
+			pDC->LineTo(rect.right - CORNER_SIZE - 1, rect.bottom - 1);
+			pDC->LineTo(CORNER_SIZE, rect.bottom - 1);
+			pDC->LineTo(rect.left, rect.bottom - CORNER_SIZE - 1);
+			pDC->LineTo(rect.left, CORNER_SIZE);
+
+			// fill in gaps
+			pDC->MoveTo(rect.left + 1, CORNER_SIZE);
+			pDC->LineTo(CORNER_SIZE + 1, rect.top);
+			pDC->MoveTo(rect.right - CORNER_SIZE - 1, rect.top + 1);
+			pDC->LineTo(rect.right - 1, CORNER_SIZE + 1);
+			pDC->MoveTo(rect.right - 2, rect.bottom - CORNER_SIZE - 1);
+			pDC->LineTo(rect.right - CORNER_SIZE - 1, rect.bottom - 1);
+			pDC->MoveTo(CORNER_SIZE, rect.bottom - 2);
+			pDC->LineTo(rect.left, rect.bottom - CORNER_SIZE - 2);
+
+			pDC->SelectObject(old_pen);
+
+			// inside of window border
+			CPen new_pen2(PS_SOLID, 1, RGB(196, 234, 247));
+			old_pen = pDC->SelectObject(&new_pen2);
+
+			pDC->MoveTo(rect.left + 1, CORNER_SIZE + 1);
+			pDC->LineTo(CORNER_SIZE + 1, rect.top + 1);
+			pDC->LineTo(rect.right - CORNER_SIZE - 2, rect.top + 1);
+			pDC->LineTo(rect.right - 2, CORNER_SIZE + 1);
+			pDC->LineTo(rect.right - 2, rect.bottom - CORNER_SIZE - 2);
+			pDC->LineTo(rect.right - CORNER_SIZE - 2, rect.bottom - 2);
+			pDC->LineTo(CORNER_SIZE + 1, rect.bottom - 2);
+			pDC->LineTo(rect.left + 1, rect.bottom - CORNER_SIZE - 2);
+			pDC->LineTo(rect.left + 1, CORNER_SIZE + 1);
+		}
+		break;
+	case WM_SIZE:
+		{
+			if (p->hwnd == g_hwnd)
+			{
+				// remove the four sharp corners of the border
+				if (p->wParam != SIZE_MAXIMIZED)
+				{
+					RECT rc;
+					GetClientRect(g_hwnd, &rc);
+
+					CRgn rgn;
+					CPoint points[8] =
+					{
+						CPoint(rc.left, CORNER_SIZE),
+						CPoint(CORNER_SIZE, rc.top),
+						CPoint(rc.right - CORNER_SIZE, rc.top),
+						CPoint(rc.right, CORNER_SIZE),
+						CPoint(rc.right, rc.bottom - CORNER_SIZE - 1),
+						CPoint(rc.right - CORNER_SIZE - 1, rc.bottom),
+						CPoint(CORNER_SIZE + 1, rc.bottom),
+						CPoint(rc.left, rc.bottom - CORNER_SIZE - 1)
+					};
+
+					int nPolyCounts[1] = {8};
+					int dd = rgn.CreatePolyPolygonRgn(points, nPolyCounts, 1, WINDING);
+					SetWindowRgn(g_hwnd, rgn, TRUE);
+				}
+				else
+				{
+					SetWindowRgn(g_hwnd, NULL, FALSE);
+				}
+			}
+		}
+		break;
 	}
 
 	return CallNextHookEx(g_hhook1, nCode, wParam, lParam);
@@ -297,9 +383,18 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_WINDOWEDGE);*/
 
 			// round rectangle
-			HRGN hrgn;
+			RECT window_rect;
 			RECT client_rect;
+			GetWindowRect(hwnd, &window_rect);
 			GetClientRect(hwnd, &client_rect);
+			MoveWindow(hwnd,
+				window_rect.left,
+				window_rect.top,
+				client_rect.right - client_rect.left,
+				client_rect.bottom - client_rect.top,
+				TRUE
+				);
+			/*HRGN hrgn;
 			hrgn = CreateRoundRectRgn(
 				0,
 				0,
@@ -308,7 +403,7 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				16,
 				16
 				);
-			SetWindowRgn(hwnd, hrgn, TRUE);
+			SetWindowRgn(hwnd, hrgn, TRUE);*/
 
 			// draw minimize and close button
 			g_hwnd_minimize = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
@@ -330,8 +425,8 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				(HMENU)IDC_BUTTON_CLOSE,
 				NULL,
 				NULL);
-			break;
 		}
+		break;
 	}
 
 	return CallNextHookEx(g_hhook3, nCode, wParam, lParam);
