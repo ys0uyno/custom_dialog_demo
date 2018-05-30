@@ -5,8 +5,8 @@
 #include <Windows.h>
 #include <atlstr.h>
 
-typedef void (*BEGDIALOGHOOK)();
-typedef void (*ENDDIALOGHOOK)();
+typedef void (*BEGCBTHOOK)();
+typedef void (*ENDCBTHOOK)();
 
 int get_current_dir(CString &path)
 {
@@ -37,13 +37,36 @@ int get_current_dir(CString &path)
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	HMODULE hmodule = LoadLibrary(L"hook_cbt_wnd_created");
+	if (NULL == hmodule)
+	{
+		printf("LoadLibrary failed: %d\n", GetLastError());
+		return -1;
+	}
+
+	BEGCBTHOOK beg_hook = (BEGCBTHOOK)GetProcAddress(hmodule, "BegCbtHook");
+	if (NULL == beg_hook)
+	{
+		printf("GetProcAddress BegCbtHook failed: %d\n", GetLastError());
+		FreeLibrary(hmodule);
+		return -1;
+	}
+
+	ENDCBTHOOK end_hook = (ENDCBTHOOK)GetProcAddress(hmodule, "EndCbtHook");
+	if (NULL == end_hook)
+	{
+		printf("GetProcAddress EndCbtHook failed: %d\n", GetLastError());
+		FreeLibrary(hmodule);
+		return -1;
+	}
+
 	CString str_exe;
 	get_current_dir(str_exe);
 
-	str_exe.Append(L"mfc_dialog.exe");
+	str_exe.Append(L"win32_dll_loader.exe");
 	if (-1 == _taccess(str_exe, 0))
 	{
-		printf("mfc_dialog.exe not found\n");
+		printf("win32_dll_loader.exe not found\n");
 		return -1;
 	}
 
@@ -59,34 +82,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		printf("CreateProcess failed: %d\n", GetLastError());
 		return -1;
 	}
-
-	HMODULE hmodule = LoadLibrary(L"hook_mfc_dialog");
-	if (NULL == hmodule)
-	{
-		printf("LoadLibrary failed: %d\n", GetLastError());
-		CloseHandle(pi.hProcess);
-		return -1;
-	}
-
-	BEGDIALOGHOOK beg_hook = (BEGDIALOGHOOK)GetProcAddress(hmodule, "BegDialogHook");
-	if (NULL == beg_hook)
-	{
-		printf("GetProcAddress BegDialogHook failed: %d\n", GetLastError());
-		CloseHandle(pi.hProcess);
-		FreeLibrary(hmodule);
-		return -1;
-	}
-
-	ENDDIALOGHOOK end_hook = (ENDDIALOGHOOK)GetProcAddress(hmodule, "EndDialogHook");
-	if (NULL == end_hook)
-	{
-		printf("GetProcAddress EndDialogHook failed: %d\n", GetLastError());
-		CloseHandle(pi.hProcess);
-		FreeLibrary(hmodule);
-		return -1;
-	}
-
-	WaitForSingleObject(pi.hProcess, 2000);
 
 	beg_hook();
 	getchar();

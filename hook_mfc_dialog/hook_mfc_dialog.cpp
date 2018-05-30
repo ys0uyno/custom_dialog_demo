@@ -19,8 +19,8 @@
 HINSTANCE g_hinstance = NULL;
 HHOOK g_hhook1 = NULL;
 HHOOK g_hhook2 = NULL;
+HHOOK g_hhook3 = NULL;
 
-BOOL g_once = TRUE;
 HWND g_hwnd = NULL;
 HWND g_hwnd_minimize = NULL;
 HWND g_hwnd_close = NULL;
@@ -96,77 +96,6 @@ void fill_rect(HDC hdc, Gdiplus::Rect rect, Gdiplus::Color *color, float *positi
 
 LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-	if (g_once)
-	{
-		g_once = FALSE;
-
-		TCHAR sz[MAX_PATH] = {0};
-
-		HWND hwnd = FindWindow(NULL, TARGET_WND);
-		if (NULL == hwnd)
-		{
-			_stprintf_s(sz, L"%S(%d): FindWindow failed: %d",
-				__FUNCTION__, __LINE__, GetLastError());
-			OutputDebugString(sz);
-			return CallNextHookEx(g_hhook1, nCode, wParam, lParam);
-		}
-
-		g_hwnd = hwnd;
-
-		long new_style = WS_OVERLAPPED
-			| WS_VISIBLE
-			| WS_SYSMENU
-			| WS_MINIMIZEBOX
-			| WS_MAXIMIZEBOX
-			| WS_CLIPCHILDREN
-			| WS_CLIPSIBLINGS;
-
-		long lstyle = GetWindowLong(hwnd, GWL_STYLE);
-		lstyle &= new_style; // & will remove style from new_style
-		SetWindowLong(hwnd, GWL_STYLE, lstyle);
-		OutputDebugString(L"SetWindowLong done");
-
-		/*SetWindowLong(hwnd, GWL_STYLE,
-			WS_CAPTION | WS_VISIBLE | WS_CLIPSIBLINGS | WS_OVERLAPPED |  WS_THICKFRAME | 0x00008000);
-		SetWindowLong(hwnd, GWL_EXSTYLE,
-			WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_WINDOWEDGE);*/
-
-		// round rectangle
-		HRGN hrgn;
-		RECT client_rect;
-		GetClientRect(hwnd, &client_rect);
-		hrgn = CreateRoundRectRgn(
-			0,
-			0,
-			client_rect.right - client_rect.left,
-			client_rect.bottom - client_rect.top,
-			16,
-			16
-			);
-		SetWindowRgn(hwnd, hrgn, TRUE);
-
-		// draw minimize and close button
-		g_hwnd_minimize = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-			client_rect.right - 32 * 2 - 4,
-			client_rect.top,
-			32,
-			32,
-			hwnd,
-			(HMENU)IDC_BUTTON_MINIMIZE,
-			NULL,
-			NULL);
-
-		g_hwnd_close = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-			client_rect.right - 32 * 1 - 4,
-			client_rect.top,
-			32,
-			32,
-			hwnd,
-			(HMENU)IDC_BUTTON_CLOSE,
-			NULL,
-			NULL);
-	}
-
 	CWPSTRUCT *p = (CWPSTRUCT *)lParam;
 	LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)p->lParam;
 
@@ -328,19 +257,88 @@ LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(g_hhook2, nCode, wParam, lParam);
 }
 
-extern "C" __declspec(dllexport) void BegDialogHook()
+LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 {
-	TCHAR sz[MAX_PATH] = {0};
-
-	HWND hwnd = FindWindow(NULL, TARGET_WND);
-	if (NULL == hwnd)
+	CWPRETSTRUCT *p = (CWPRETSTRUCT *)lParam;
+	switch (p->message)
 	{
-		_stprintf_s(sz, L"%S(%d): FindWindow failed: %d",
-			__FUNCTION__, __LINE__, GetLastError());
-		OutputDebugString(sz);
-		return;
+	case WM_INITDIALOG:
+		{
+			OutputDebugString(L"after hook_mfc_dialog WM_INITDIALOG");
+			TCHAR sz[MAX_PATH] = {0};
+			
+			HWND hwnd = FindWindow(NULL, TARGET_WND);
+			if (NULL == hwnd)
+			{
+				_stprintf_s(sz, L"%S(%d): FindWindow failed: %d",
+					__FUNCTION__, __LINE__, GetLastError());
+				OutputDebugString(sz);
+				break;
+			}
+
+			g_hwnd = hwnd;
+
+			long new_style = WS_OVERLAPPED
+				| WS_VISIBLE
+				| WS_SYSMENU
+				| WS_MINIMIZEBOX
+				| WS_MAXIMIZEBOX
+				| WS_CLIPCHILDREN
+				| WS_CLIPSIBLINGS;
+
+			long lstyle = GetWindowLong(hwnd, GWL_STYLE);
+			lstyle &= new_style; // & will remove style from new_style
+			SetWindowLong(hwnd, GWL_STYLE, lstyle);
+			OutputDebugString(L"SetWindowLong done");
+
+			/*SetWindowLong(hwnd, GWL_STYLE,
+				WS_CAPTION | WS_VISIBLE | WS_CLIPSIBLINGS | WS_OVERLAPPED |  WS_THICKFRAME | 0x00008000);
+			SetWindowLong(hwnd, GWL_EXSTYLE,
+				WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_WINDOWEDGE);*/
+
+			// round rectangle
+			HRGN hrgn;
+			RECT client_rect;
+			GetClientRect(hwnd, &client_rect);
+			hrgn = CreateRoundRectRgn(
+				0,
+				0,
+				client_rect.right - client_rect.left,
+				client_rect.bottom - client_rect.top,
+				16,
+				16
+				);
+			SetWindowRgn(hwnd, hrgn, TRUE);
+
+			// draw minimize and close button
+			g_hwnd_minimize = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+				client_rect.right - 32 * 2 - 4,
+				client_rect.top,
+				32,
+				32,
+				hwnd,
+				(HMENU)IDC_BUTTON_MINIMIZE,
+				NULL,
+				NULL);
+
+			g_hwnd_close = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+				client_rect.right - 32 * 1 - 4,
+				client_rect.top,
+				32,
+				32,
+				hwnd,
+				(HMENU)IDC_BUTTON_CLOSE,
+				NULL,
+				NULL);
+			break;
+		}
 	}
 
+	return CallNextHookEx(g_hhook3, nCode, wParam, lParam);
+}
+
+extern "C" __declspec(dllexport) void BegDialogHook(HWND hwnd)
+{
 	DWORD tid = GetWindowThreadProcessId(hwnd, NULL);
 	if (0 == tid)
 	{
@@ -351,6 +349,7 @@ extern "C" __declspec(dllexport) void BegDialogHook()
 	g_hinstance = GetModuleHandle(L"hook_mfc_dialog.dll");
 	g_hhook1 = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, g_hinstance, tid);
 	g_hhook2 = SetWindowsHookEx(WH_GETMESSAGE, GetMsgProc, g_hinstance, tid);
+	g_hhook3 = SetWindowsHookEx(WH_CALLWNDPROCRET, CallWndRetProc, g_hinstance, tid);
 }
 
 extern "C" __declspec(dllexport) void EndDialogHook()
@@ -360,4 +359,7 @@ extern "C" __declspec(dllexport) void EndDialogHook()
 
 	if (NULL != g_hhook2)
 		UnhookWindowsHookEx(g_hhook2);
+
+	if (NULL != g_hhook3)
+		UnhookWindowsHookEx(g_hhook3);
 }

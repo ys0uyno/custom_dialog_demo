@@ -7,6 +7,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mfc_dialog", "mfc_dialog\mf
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hook_mfc_dialog", "hook_mfc_dialog\hook_mfc_dialog.vcxproj", "{2B258931-9BEC-45EF-9AC4-2952ECE3E050}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32_dll_loader", "win32_dll_loader\win32_dll_loader.vcxproj", "{FE87B872-D48A-48A5-A61E-AC780F9C4D17}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hook_cbt_wnd_created", "hook_cbt_wnd_created\hook_cbt_wnd_created.vcxproj", "{609540AB-E8EB-4573-B22F-C9CF359FAF7E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -25,6 +29,14 @@ Global
 		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Debug|Win32.Build.0 = Debug|Win32
 		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Release|Win32.ActiveCfg = Release|Win32
 		{2B258931-9BEC-45EF-9AC4-2952ECE3E050}.Release|Win32.Build.0 = Release|Win32
+		{FE87B872-D48A-48A5-A61E-AC780F9C4D17}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FE87B872-D48A-48A5-A61E-AC780F9C4D17}.Debug|Win32.Build.0 = Debug|Win32
+		{FE87B872-D48A-48A5-A61E-AC780F9C4D17}.Release|Win32.ActiveCfg = Release|Win32
+		{FE87B872-D48A-48A5-A61E-AC780F9C4D17}.Release|Win32.Build.0 = Release|Win32
+		{609540AB-E8EB-4573-B22F-C9CF359FAF7E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{609540AB-E8EB-4573-B22F-C9CF359FAF7E}.Debug|Win32.Build.0 = Debug|Win32
+		{609540AB-E8EB-4573-B22F-C9CF359FAF7E}.Release|Win32.ActiveCfg = Release|Win32
+		{609540AB-E8EB-4573-B22F-C9CF359FAF7E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
