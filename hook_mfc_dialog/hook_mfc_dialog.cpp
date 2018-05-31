@@ -493,11 +493,10 @@ LRESULT CALLBACK new_proc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	if (Msg == WM_CTLCOLORBTN)
 	{
-		CBitmap bmp;
-		OutputDebugString(L"new_proc WM_CTLCOLORBTN");
-		bmp.LoadBitmap(IDB_BACKGROUND);
-		/*return (INT_PTR)CreateSolidBrush(RGB(102, 178, 255));*/
-		return (INT_PTR)CreatePatternBrush((HBITMAP)bmp.GetSafeHandle());
+		HBRUSH hbrush;
+		hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+		SetBkMode((HDC)wParam, TRANSPARENT);
+		return ((LRESULT)hbrush);
 	}
 
 	return CallWindowProc(g_old_proc, hWnd, Msg, wParam, lParam);
