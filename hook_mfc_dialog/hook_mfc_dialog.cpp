@@ -15,6 +15,7 @@
 
 #define IDC_BUTTON_MINIMIZE 1101
 #define IDC_BUTTON_CLOSE 1102
+#define IDC_MFC_CBUTTON_TEST 1103
 
 #define CORNER_SIZE 2
 
@@ -26,6 +27,8 @@ HHOOK g_hhook3 = NULL;
 HWND g_hwnd = NULL;
 HWND g_hwnd_minimize = NULL;
 HWND g_hwnd_close = NULL;
+
+CButton g_cbutton;
 
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
@@ -425,6 +428,14 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				(HMENU)IDC_BUTTON_CLOSE,
 				NULL,
 				NULL);
+
+			g_cbutton.Create(L"MFC CButton", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+				CRect(0, 160, 100, 180), CWnd::FromHandle(hwnd), IDC_MFC_CBUTTON_TEST);
+		}
+		break;
+	case WM_CTLCOLORBTN:
+		{
+			OutputDebugString(L"g_hhook3 WM_CTLCOLORBTN");
 		}
 		break;
 	}
