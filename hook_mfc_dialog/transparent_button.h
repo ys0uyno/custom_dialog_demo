@@ -50,4 +50,5 @@ public:
 	bool m_b_ishover;
 	bool m_b_isclicked;
 	bool m_b_autosize;
+	HINSTANCE m_hinstance;
 };

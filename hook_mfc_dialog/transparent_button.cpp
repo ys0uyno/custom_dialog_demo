@@ -15,6 +15,7 @@ transparent_button::transparent_button()
 	m_button_png_hover.pimage = NULL;
 	m_button_png_click.pimage = NULL;
 	m_button_png_disable.pimage = NULL;
+	m_hinstance = LoadLibrary(L"hook_mfc_dialog.dll");
 }
 
 transparent_button::~transparent_button()
@@ -42,6 +43,11 @@ transparent_button::~transparent_button()
 		delete m_button_png_disable.pimage;
 		m_button_png_disable.pimage = NULL;
 	}
+
+	if (NULL != m_hinstance)
+	{
+		FreeLibrary(m_hinstance);
+	}
 }
 
 BEGIN_MESSAGE_MAP(transparent_button, CButton)
@@ -55,7 +61,12 @@ END_MESSAGE_MAP()
 
 void transparent_button::Load(UINT IDBkGroup, int width, int height, const CString &resource_type)
 {
-	HINSTANCE hinstance = GetModuleHandle(L"hook_mfc_dialog.dll");
+	if (NULL == m_hinstance)
+	{
+		return;
+	}
+
+	HINSTANCE hinstance = m_hinstance;
 	HRSRC hrsrc = FindResource(hinstance, MAKEINTRESOURCE(IDBkGroup), resource_type);
 	if (NULL == hrsrc)
 	{
