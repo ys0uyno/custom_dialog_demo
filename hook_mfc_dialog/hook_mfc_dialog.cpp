@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "hook_mfc_dialog.h"
 #include <GdiPlus.h>
+#include "transparent_button.h"
 
 #pragma comment(lib, "GdiPlus.lib")
 
@@ -16,6 +17,7 @@
 #define IDC_BUTTON_MINIMIZE 1101
 #define IDC_BUTTON_CLOSE 1102
 #define IDC_MFC_CBUTTON_TEST 1103
+#define IDC_TRANSPARENT_BUTTON_TEST 1104
 
 #define CORNER_SIZE 2
 
@@ -29,6 +31,8 @@ HWND g_hwnd_minimize = NULL;
 HWND g_hwnd_close = NULL;
 
 CButton g_cbutton;
+transparent_button g_tb_button;
+HWND g_tb_button_hwnd = NULL;
 
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
@@ -97,6 +101,90 @@ void fill_rect(HDC hdc, Gdiplus::Rect rect, Gdiplus::Color *color, float *positi
 
 	gradient_brush.SetInterpolationColors(color, position, i);
 	graphics.FillRectangle(&gradient_brush, rect);
+}
+
+void DrawBK(HDC dc, CImage *img, BUTTON_STATUS button_status, HWND tb_hwnd)
+{
+	if (!img)
+	{
+		return;
+	}
+
+	CRect rc;
+	GetClientRect(tb_hwnd, &rc);
+	CRect temp_rect;
+	int nX = 0;
+	int nY = 0;
+	int nW = 0;
+	int nH = 0;
+
+	if (g_tb_button.m_b_autosize == true)
+	{
+		temp_rect.SetRect(0, 0, rc.Width(), rc.Height());
+		if (img)
+		{
+			img->Draw(dc, temp_rect);
+		}
+	}
+	else
+	{
+		if(button_status == BUTTON_NORMAL)
+		{
+			nW = g_tb_button.m_button_png_normal.width;
+			nH = g_tb_button.m_button_png_normal.height;
+		}
+		else if (button_status == BUTTON_HOVER)
+		{
+			nW = g_tb_button.m_button_png_hover.width;
+			nH = g_tb_button.m_button_png_hover.height;
+		}
+		else if (button_status == BUTTON_CLICK)
+		{
+			nW = g_tb_button.m_button_png_click.width;
+			nH = g_tb_button.m_button_png_click.height;
+		}
+		else
+		{
+			nW = g_tb_button.m_button_png_disable.width;
+			nH = g_tb_button.m_button_png_disable.height;
+		}
+
+		nX = (rc.Width() - nW) / 2;
+		nY = (rc.Height() - nH) / 2;
+		temp_rect.SetRect(nX, nY, nW + nX, nH + nY);
+		if (img)
+		{
+			img->Draw(dc, temp_rect);
+		}
+	}
+}
+
+void DrawButtonText(HDC dc, const CString &strText, int nMove, BUTTON_STATUS button_status, HWND tb_hwnd)
+{
+	CRect rect;
+	GetClientRect(tb_hwnd, &rect);
+	rect.DeflateRect(nMove, nMove, 0, 0);
+
+	CDC::FromHandle(dc)->SetBkMode(TRANSPARENT);
+
+	if (button_status == BUTTON_NORMAL)
+	{
+		CDC::FromHandle(dc)->SetTextColor(RGB(30, 30, 30));
+	}
+	else if (button_status == BUTTON_HOVER)
+	{
+		CDC::FromHandle(dc)->SetTextColor(RGB(30, 30, 30));
+	}
+	else if (button_status == BUTTON_CLICK)
+	{
+		CDC::FromHandle(dc)->SetTextColor(RGB(30, 30, 30));
+	}
+	else
+	{
+		CDC::FromHandle(dc)->SetTextColor(RGB(100, 100, 100));
+	}
+
+	CDC::FromHandle(dc)->DrawText(strText, rect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
 }
 
 LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -207,6 +295,59 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 					Gdiplus::PointF point8(13.0f, 23.0f);
 					Gdiplus::PointF points2[4] = {point5, point6, point7, point8};
 					graphics.FillPolygon(&gbrush, points2, 4, Gdiplus::FillModeAlternate);
+				}
+				break;
+			case IDC_TRANSPARENT_BUTTON_TEST:
+				{
+					g_tb_button_hwnd = GetDlgItem(g_hwnd, IDC_TRANSPARENT_BUTTON_TEST);
+					if (NULL == g_tb_button_hwnd)
+						break;
+
+					CDC *pDC = CDC::FromHandle(pdis->hDC);
+					CRect rect = pdis->rcItem;
+					TCHAR strText[MAX_PATH] = {0};
+					GetWindowText(g_tb_button_hwnd, strText, MAX_PATH);
+
+					if(pdis->itemState & ODS_DISABLED)
+					{
+						DrawBK(*pDC, g_tb_button.m_button_png_disable.pimage, BUTTON_DISABLE, g_tb_button_hwnd);
+					}
+					else if(pdis->itemState & ODS_SELECTED
+						|| (g_tb_button.m_b_ishover && g_tb_button.m_b_isclicked))
+					{
+						DrawBK(*pDC, g_tb_button.m_button_png_click.pimage, BUTTON_CLICK, g_tb_button_hwnd);
+					}
+					else if(g_tb_button.m_b_ishover)
+					{
+						DrawBK(*pDC, g_tb_button.m_button_png_hover.pimage, BUTTON_HOVER, g_tb_button_hwnd);
+					}
+					else
+					{
+						DrawBK(*pDC, g_tb_button.m_button_png_normal.pimage, BUTTON_NORMAL, g_tb_button_hwnd);
+					}
+
+					CString strTemp(strText);
+					strTemp.Remove(' ');
+					if (!strTemp.IsEmpty())
+					{
+						if(pdis->itemState & ODS_DISABLED)
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_DISABLE, g_tb_button_hwnd);
+						}
+						else if(pdis->itemState & ODS_SELECTED
+							|| (g_tb_button.m_b_ishover && g_tb_button.m_b_isclicked))
+						{
+							DrawButtonText(*pDC, strText, 1, BUTTON_CLICK, g_tb_button_hwnd);
+						}
+						else if(g_tb_button.m_b_ishover)
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_HOVER, g_tb_button_hwnd);
+						}
+						else
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_NORMAL, g_tb_button_hwnd);
+						}
+					}
 				}
 				break;
 			}
@@ -431,6 +572,11 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 
 			g_cbutton.Create(L"MFC CButton", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 				CRect(0, 160, 100, 180), CWnd::FromHandle(hwnd), IDC_MFC_CBUTTON_TEST);
+
+			g_tb_button.Create(L"tb button", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+				CRect(120, 160, 200, 180), CWnd::FromHandle(hwnd), IDC_TRANSPARENT_BUTTON_TEST);
+
+			g_tb_button.Load(IDB_BUTTON, 244);
 		}
 		break;
 	case WM_CTLCOLORBTN:
