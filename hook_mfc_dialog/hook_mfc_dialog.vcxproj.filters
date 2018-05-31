@@ -25,6 +25,9 @@
     <None Include="res\button.png">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="splash.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="hook_mfc_dialog.cpp">

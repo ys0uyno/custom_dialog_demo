@@ -98,6 +98,7 @@
     <None Include="ReadMe.txt" />
     <None Include="res\button.png" />
     <None Include="res\hook_mfc_dialog.rc2" />
+    <None Include="splash.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="hook_mfc_dialog.cpp" />

@@ -34,6 +34,8 @@ CButton g_cbutton;
 transparent_button g_tb_button;
 HWND g_tb_button_hwnd = NULL;
 
+WNDPROC g_old_proc;
+
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
 //		any functions exported from this DLL which call into
@@ -487,6 +489,20 @@ LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(g_hhook2, nCode, wParam, lParam);
 }
 
+LRESULT CALLBACK new_proc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	if (Msg == WM_CTLCOLORBTN)
+	{
+		CBitmap bmp;
+		OutputDebugString(L"new_proc WM_CTLCOLORBTN");
+		bmp.LoadBitmap(IDB_BACKGROUND);
+		/*return (INT_PTR)CreateSolidBrush(RGB(102, 178, 255));*/
+		return (INT_PTR)CreatePatternBrush((HBITMAP)bmp.GetSafeHandle());
+	}
+
+	return CallWindowProc(g_old_proc, hWnd, Msg, wParam, lParam);
+}
+
 LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 {
 	CWPRETSTRUCT *p = (CWPRETSTRUCT *)lParam;
@@ -577,6 +593,8 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				CRect(120, 160, 200, 180), CWnd::FromHandle(hwnd), IDC_TRANSPARENT_BUTTON_TEST);
 
 			g_tb_button.Load(IDB_BUTTON, 244);
+
+			g_old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)new_proc);
 		}
 		break;
 	case WM_CTLCOLORBTN:
