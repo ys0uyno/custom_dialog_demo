@@ -28,6 +28,12 @@
     <None Include="splash.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\close.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\minimize.png">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="hook_mfc_dialog.cpp">

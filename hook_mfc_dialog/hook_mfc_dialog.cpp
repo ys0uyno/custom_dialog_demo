@@ -18,6 +18,8 @@
 #define IDC_BUTTON_CLOSE 1102
 #define IDC_MFC_CBUTTON_TEST 1103
 #define IDC_TRANSPARENT_BUTTON_TEST 1104
+#define IDC_TRANSPARENT_BUTTON_MINIMIZE 1105
+#define IDC_TRANSPARENT_BUTTON_CLOSE 1106
 
 #define CORNER_SIZE 2
 
@@ -32,7 +34,11 @@ HWND g_hwnd_close = NULL;
 
 CButton g_cbutton;
 transparent_button g_tb_button;
+transparent_button g_tb_button_minimize;
+transparent_button g_tb_button_close;
 HWND g_tb_button_hwnd = NULL;
+HWND g_tb_button_minimize_hwnd = NULL;
+HWND g_tb_button_close_hwnd = NULL;
 
 WNDPROC g_old_proc;
 
@@ -105,7 +111,7 @@ void fill_rect(HDC hdc, Gdiplus::Rect rect, Gdiplus::Color *color, float *positi
 	graphics.FillRectangle(&gradient_brush, rect);
 }
 
-void DrawBK(HDC dc, CImage *img, BUTTON_STATUS button_status, HWND tb_hwnd)
+void DrawBK(HDC dc, CImage *img, BUTTON_STATUS button_status, const transparent_button *tb, HWND tb_hwnd)
 {
 	if (!img)
 	{
@@ -120,7 +126,7 @@ void DrawBK(HDC dc, CImage *img, BUTTON_STATUS button_status, HWND tb_hwnd)
 	int nW = 0;
 	int nH = 0;
 
-	if (g_tb_button.m_b_autosize == true)
+	if (tb->m_b_autosize == true)
 	{
 		temp_rect.SetRect(0, 0, rc.Width(), rc.Height());
 		if (img)
@@ -132,23 +138,23 @@ void DrawBK(HDC dc, CImage *img, BUTTON_STATUS button_status, HWND tb_hwnd)
 	{
 		if(button_status == BUTTON_NORMAL)
 		{
-			nW = g_tb_button.m_button_png_normal.width;
-			nH = g_tb_button.m_button_png_normal.height;
+			nW = tb->m_button_png_normal.width;
+			nH = tb->m_button_png_normal.height;
 		}
 		else if (button_status == BUTTON_HOVER)
 		{
-			nW = g_tb_button.m_button_png_hover.width;
-			nH = g_tb_button.m_button_png_hover.height;
+			nW = tb->m_button_png_hover.width;
+			nH = tb->m_button_png_hover.height;
 		}
 		else if (button_status == BUTTON_CLICK)
 		{
-			nW = g_tb_button.m_button_png_click.width;
-			nH = g_tb_button.m_button_png_click.height;
+			nW = tb->m_button_png_click.width;
+			nH = tb->m_button_png_click.height;
 		}
 		else
 		{
-			nW = g_tb_button.m_button_png_disable.width;
-			nH = g_tb_button.m_button_png_disable.height;
+			nW = tb->m_button_png_disable.width;
+			nH = tb->m_button_png_disable.height;
 		}
 
 		nX = (rc.Width() - nW) / 2;
@@ -312,20 +318,24 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 					if(pdis->itemState & ODS_DISABLED)
 					{
-						DrawBK(*pDC, g_tb_button.m_button_png_disable.pimage, BUTTON_DISABLE, g_tb_button_hwnd);
+						DrawBK(*pDC, g_tb_button.m_button_png_disable.pimage, BUTTON_DISABLE,
+							&g_tb_button, g_tb_button_hwnd);
 					}
 					else if(pdis->itemState & ODS_SELECTED
 						|| (g_tb_button.m_b_ishover && g_tb_button.m_b_isclicked))
 					{
-						DrawBK(*pDC, g_tb_button.m_button_png_click.pimage, BUTTON_CLICK, g_tb_button_hwnd);
+						DrawBK(*pDC, g_tb_button.m_button_png_click.pimage, BUTTON_CLICK,
+							&g_tb_button, g_tb_button_hwnd);
 					}
 					else if(g_tb_button.m_b_ishover)
 					{
-						DrawBK(*pDC, g_tb_button.m_button_png_hover.pimage, BUTTON_HOVER, g_tb_button_hwnd);
+						DrawBK(*pDC, g_tb_button.m_button_png_hover.pimage, BUTTON_HOVER,
+							&g_tb_button, g_tb_button_hwnd);
 					}
 					else
 					{
-						DrawBK(*pDC, g_tb_button.m_button_png_normal.pimage, BUTTON_NORMAL, g_tb_button_hwnd);
+						DrawBK(*pDC, g_tb_button.m_button_png_normal.pimage, BUTTON_NORMAL,
+							&g_tb_button, g_tb_button_hwnd);
 					}
 
 					CString strTemp(strText);
@@ -352,6 +362,120 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 					}
 				}
 				break;
+			case IDC_TRANSPARENT_BUTTON_MINIMIZE:
+				{
+					g_tb_button_minimize_hwnd = GetDlgItem(g_hwnd, IDC_TRANSPARENT_BUTTON_MINIMIZE);
+					if (NULL == g_tb_button_minimize_hwnd)
+						break;
+
+					CDC *pDC = CDC::FromHandle(pdis->hDC);
+					CRect rect = pdis->rcItem;
+					TCHAR strText[MAX_PATH] = {0};
+					GetWindowText(g_tb_button_minimize_hwnd, strText, MAX_PATH);
+
+					if(pdis->itemState & ODS_DISABLED)
+					{
+						DrawBK(*pDC, g_tb_button_minimize.m_button_png_disable.pimage, BUTTON_DISABLE,
+							&g_tb_button_minimize, g_tb_button_minimize_hwnd);
+					}
+					else if(pdis->itemState & ODS_SELECTED
+						|| (g_tb_button_minimize.m_b_ishover && g_tb_button_minimize.m_b_isclicked))
+					{
+						DrawBK(*pDC, g_tb_button_minimize.m_button_png_click.pimage, BUTTON_CLICK,
+							&g_tb_button_minimize, g_tb_button_minimize_hwnd);
+					}
+					else if(g_tb_button_minimize.m_b_ishover)
+					{
+						DrawBK(*pDC, g_tb_button_minimize.m_button_png_hover.pimage, BUTTON_HOVER,
+							&g_tb_button_minimize, g_tb_button_minimize_hwnd);
+					}
+					else
+					{
+						DrawBK(*pDC, g_tb_button_minimize.m_button_png_normal.pimage, BUTTON_NORMAL,
+							&g_tb_button_minimize, g_tb_button_minimize_hwnd);
+					}
+
+					CString strTemp(strText);
+					strTemp.Remove(' ');
+					if (!strTemp.IsEmpty())
+					{
+						if(pdis->itemState & ODS_DISABLED)
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_DISABLE, g_tb_button_minimize_hwnd);
+						}
+						else if(pdis->itemState & ODS_SELECTED
+							|| (g_tb_button_minimize.m_b_ishover && g_tb_button_minimize.m_b_isclicked))
+						{
+							DrawButtonText(*pDC, strText, 1, BUTTON_CLICK, g_tb_button_minimize_hwnd);
+						}
+						else if(g_tb_button_minimize.m_b_ishover)
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_HOVER, g_tb_button_minimize_hwnd);
+						}
+						else
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_NORMAL, g_tb_button_minimize_hwnd);
+						}
+					}
+				}
+				break;
+			case IDC_TRANSPARENT_BUTTON_CLOSE:
+				{
+					g_tb_button_close_hwnd = GetDlgItem(g_hwnd, IDC_TRANSPARENT_BUTTON_CLOSE);
+					if (NULL == g_tb_button_close_hwnd)
+						break;
+
+					CDC *pDC = CDC::FromHandle(pdis->hDC);
+					CRect rect = pdis->rcItem;
+					TCHAR strText[MAX_PATH] = {0};
+					GetWindowText(g_tb_button_close_hwnd, strText, MAX_PATH);
+
+					if(pdis->itemState & ODS_DISABLED)
+					{
+						DrawBK(*pDC, g_tb_button_close.m_button_png_disable.pimage, BUTTON_DISABLE,
+							&g_tb_button_close, g_tb_button_close_hwnd);
+					}
+					else if(pdis->itemState & ODS_SELECTED
+						|| (g_tb_button_close.m_b_ishover && g_tb_button_close.m_b_isclicked))
+					{
+						DrawBK(*pDC, g_tb_button_close.m_button_png_click.pimage, BUTTON_CLICK,
+							&g_tb_button_close, g_tb_button_close_hwnd);
+					}
+					else if(g_tb_button_close.m_b_ishover)
+					{
+						DrawBK(*pDC, g_tb_button_close.m_button_png_hover.pimage, BUTTON_HOVER,
+							&g_tb_button_close, g_tb_button_close_hwnd);
+					}
+					else
+					{
+						DrawBK(*pDC, g_tb_button_close.m_button_png_normal.pimage, BUTTON_NORMAL,
+							&g_tb_button_close, g_tb_button_close_hwnd);
+					}
+
+					CString strTemp(strText);
+					strTemp.Remove(' ');
+					if (!strTemp.IsEmpty())
+					{
+						if(pdis->itemState & ODS_DISABLED)
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_DISABLE, g_tb_button_close_hwnd);
+						}
+						else if(pdis->itemState & ODS_SELECTED
+							|| (g_tb_button_close.m_b_ishover && g_tb_button_close.m_b_isclicked))
+						{
+							DrawButtonText(*pDC, strText, 1, BUTTON_CLICK, g_tb_button_close_hwnd);
+						}
+						else if(g_tb_button_close.m_b_ishover)
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_HOVER, g_tb_button_close_hwnd);
+						}
+						else
+						{
+							DrawButtonText(*pDC, strText, 0, BUTTON_NORMAL, g_tb_button_close_hwnd);
+						}
+					}
+				}
+				break;
 			}
 
 			if (pdis->itemState & ODS_FOCUS)
@@ -374,6 +498,12 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 				ShowWindow(p->hwnd, SW_SHOWMINIMIZED);
 				break;
 			case IDC_BUTTON_CLOSE:
+				PostQuitMessage(0);
+				break;
+			case IDC_TRANSPARENT_BUTTON_MINIMIZE:
+				ShowWindow(p->hwnd, SW_SHOWMINIMIZED);
+				break;
+			case IDC_TRANSPARENT_BUTTON_CLOSE:
 				PostQuitMessage(0);
 				break;
 			}
@@ -565,7 +695,7 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 			SetWindowRgn(hwnd, hrgn, TRUE);*/
 
 			// draw minimize and close button
-			g_hwnd_minimize = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+			/*g_hwnd_minimize = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
 				client_rect.right - 32 * 2 - 4,
 				client_rect.top,
 				32,
@@ -583,15 +713,44 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				hwnd,
 				(HMENU)IDC_BUTTON_CLOSE,
 				NULL,
-				NULL);
+				NULL);*/
 
 			g_cbutton.Create(L"MFC CButton", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 				CRect(0, 160, 100, 180), CWnd::FromHandle(hwnd), IDC_MFC_CBUTTON_TEST);
 
 			g_tb_button.Create(L"tb button", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 				CRect(120, 160, 200, 180), CWnd::FromHandle(hwnd), IDC_TRANSPARENT_BUTTON_TEST);
-
 			g_tb_button.Load(IDB_BUTTON, 244);
+
+			g_tb_button_minimize.Create(
+				L"",
+				WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+				CRect(
+				client_rect.right - 40 * 2 - 4,
+				client_rect.top + 4,
+				client_rect.right - 40 * 2 - 4 + 40,
+				client_rect.top + 28
+				),
+				CWnd::FromHandle(hwnd),
+				IDC_TRANSPARENT_BUTTON_MINIMIZE
+				);
+			g_tb_button_minimize.SetAutoSize(false);
+			g_tb_button_minimize.Load(IDB_MINIMIZE, 28);
+
+			g_tb_button_close.Create(
+				L"",
+				WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+				CRect(
+				client_rect.right - 40 * 1 - 4,
+				client_rect.top + 4,
+				client_rect.right - 40 * 1 - 4 + 40,
+				client_rect.top + 28
+				),
+				CWnd::FromHandle(hwnd),
+				IDC_TRANSPARENT_BUTTON_CLOSE
+				);
+			g_tb_button_close.SetAutoSize(false);
+			g_tb_button_close.Load(IDB_CLOSE, 39);
 
 			g_old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)new_proc);
 		}
