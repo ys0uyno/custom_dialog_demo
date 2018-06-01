@@ -506,6 +506,9 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 			case IDC_TRANSPARENT_BUTTON_CLOSE:
 				PostQuitMessage(0);
 				break;
+			case IDC_TRANSPARENT_BUTTON_TEST:
+				MessageBox(NULL, L"Debug Assertion Failed!", L"Test", 0);
+				break;
 			}
 		}
 		break;
@@ -612,7 +615,10 @@ LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 		// it is best to use the following PostMessage, because clicking on the ok
 		// button when using SendMessage requires more than one click
-		PostMessage(g_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, p->lParam);
+		if (g_hwnd == p->hwnd)
+		{
+			PostMessage(p->hwnd, WM_NCLBUTTONDOWN, HTCAPTION, p->lParam);
+		}
 		break;
 	}
 
