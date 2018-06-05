@@ -645,6 +645,16 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 	{
 	case WM_INITDIALOG:
 		{
+			// Here it is guaranteed that WM_INITDIALOG is executed only once,
+			// but if it is returned from the next window in IS, WM_INITDIALOG
+			// will not be executed here.
+			static bool subclassed = false;
+			if (subclassed)
+			{
+				break;
+			}
+			subclassed = true;
+
 			OutputDebugString(L"after hook_mfc_dialog WM_INITDIALOG");
 			TCHAR sz[MAX_PATH] = {0};
 			
@@ -759,11 +769,6 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 			g_tb_button_close.Load(IDB_CLOSE, 39);
 
 			g_old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)new_proc);
-		}
-		break;
-	case WM_CTLCOLORBTN:
-		{
-			OutputDebugString(L"g_hhook3 WM_CTLCOLORBTN");
 		}
 		break;
 	}
