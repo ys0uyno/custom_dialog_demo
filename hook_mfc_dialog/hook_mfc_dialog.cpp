@@ -688,13 +688,11 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_WINDOWEDGE);*/
 
 			// round rectangle
-			RECT window_rect;
 			RECT client_rect;
-			GetWindowRect(hwnd, &window_rect);
 			GetClientRect(hwnd, &client_rect);
 			MoveWindow(hwnd,
-				window_rect.left,
-				window_rect.top,
+				(GetSystemMetrics(SM_CXSCREEN) - client_rect.right - client_rect.left) / 2,
+				(GetSystemMetrics(SM_CYSCREEN) - client_rect.bottom - client_rect.top) / 2,
 				client_rect.right - client_rect.left,
 				client_rect.bottom - client_rect.top,
 				TRUE
