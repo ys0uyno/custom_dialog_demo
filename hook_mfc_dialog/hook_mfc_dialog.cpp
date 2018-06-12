@@ -42,6 +42,43 @@ HWND g_tb_button_close_hwnd = NULL;
 
 WNDPROC g_old_proc;
 
+class mfc_gdi_gif
+{
+public:
+	mfc_gdi_gif()
+		: m_p_image(NULL)
+		, m_p_dimension_id(NULL)
+		, m_p_item(NULL)
+		, m_frame_count(0)
+		, m_current_frame(0)
+	{}
+
+	~mfc_gdi_gif()
+	{
+		if (m_p_image)
+			delete m_p_image;
+
+		if (m_p_dimension_id)
+			delete []m_p_dimension_id;
+
+		if (m_p_item)
+			free(m_p_item);
+	}
+
+public:
+	Gdiplus::Image *m_p_image;
+	GUID *m_p_dimension_id;
+	Gdiplus::PropertyItem *m_p_item;
+	UINT m_frame_count;
+	UINT m_current_frame;
+};
+
+mfc_gdi_gif g_gif;
+HWND g_gif_hwnd;
+
+#define IDC_STATIC_GIF 0x3e8
+#define TIMER_GIF 1
+
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
 //		any functions exported from this DLL which call into
@@ -193,6 +230,17 @@ void DrawButtonText(HDC dc, const CString &strText, int nMove, BUTTON_STATUS but
 	}
 
 	CDC::FromHandle(dc)->DrawText(strText, rect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+}
+
+void DrawBorder(Gdiplus::Graphics& g)
+{
+	CRect client;
+	GetClientRect(g_gif_hwnd, &client);
+
+	Gdiplus::Rect gdi_rect(client.left, client.top, client.Width(), client.Height());
+	Gdiplus::SolidBrush gdi_brush(Gdiplus::Color::Blue);
+
+	g.FillRectangle(&gdi_brush, gdi_rect);
 }
 
 LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -476,6 +524,17 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 					}
 				}
 				break;
+			case IDC_STATIC_GIF:
+				{
+					Gdiplus::Graphics g(pdis->hDC);
+					DrawBorder(g);
+
+					CRect client;
+					GetClientRect(g_gif_hwnd, &client);
+
+					g.DrawImage(g_gif.m_p_image, client.left, client.top, client.Width(), client.Height());
+				}
+				break;
 			}
 
 			if (pdis->itemState & ODS_FOCUS)
@@ -620,6 +679,28 @@ LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 			PostMessage(p->hwnd, WM_NCLBUTTONDOWN, HTCAPTION, p->lParam);
 		}
 		break;
+	case WM_TIMER:
+		{
+			switch (p->wParam)
+			{
+			case TIMER_GIF:
+				{
+					/*KillTimer(g_gif_hwnd, p->wParam);*/
+
+					GUID guid = Gdiplus::FrameDimensionTime;
+					g_gif.m_p_image->SelectActiveFrame(&guid, g_gif.m_current_frame);
+
+					/*SetTimer(g_gif_hwnd, TIMER_GIF,((UINT *)g_gif.m_p_item[0].value)[g_gif.m_current_frame] * 1000, NULL);*/
+					g_gif.m_current_frame = (++g_gif.m_current_frame) % g_gif.m_frame_count;
+
+					RECT gif_rect;
+					GetClientRect(g_gif_hwnd, &gif_rect);
+					InvalidateRect(g_gif_hwnd, &gif_rect, TRUE);
+				}
+				break;
+			}
+		}
+		break;
 	}
 
 	return CallNextHookEx(g_hhook2, nCode, wParam, lParam);
@@ -633,6 +714,12 @@ LRESULT CALLBACK new_proc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 		hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
 		SetBkMode((HDC)wParam, TRANSPARENT);
 		return ((LRESULT)hbrush);
+	}
+
+	if (Msg == WM_DESTROY)
+	{
+		OutputDebugString(L"new_proc WM_DESTROY");
+		KillTimer(g_gif_hwnd, TIMER_GIF);
 	}
 
 	return CallWindowProc(g_old_proc, hWnd, Msg, wParam, lParam);
@@ -767,6 +854,40 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 			g_tb_button_close.Load(IDB_CLOSE, 39);
 
 			g_old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)new_proc);
+
+			// test gif
+			g_gif_hwnd = GetDlgItem(hwnd, IDC_STATIC_GIF);
+			if (g_gif_hwnd)
+			{
+				lstyle = GetWindowLong(g_gif_hwnd, GWL_STYLE);
+				lstyle |= SS_OWNERDRAW;
+				SetWindowLong(g_gif_hwnd, GWL_STYLE, lstyle);
+
+				g_gif.m_p_image = Gdiplus::Image::FromFile(L"D:\\demos\\custom_dialog_demo\\hook_mfc_dialog\\sample.gif");
+
+				UINT count = g_gif.m_p_image->GetFrameDimensionsCount();
+				g_gif.m_p_dimension_id = new GUID[count];
+				g_gif.m_p_image->GetFrameDimensionsList(g_gif.m_p_dimension_id, count);
+
+				TCHAR tc_guid[39] = {0};
+				StringFromGUID2(g_gif.m_p_dimension_id[0], tc_guid, 39);
+
+				g_gif.m_frame_count = g_gif.m_p_image->GetFrameCount(&g_gif.m_p_dimension_id[0]);
+
+				UINT total_buffer = g_gif.m_p_image->GetPropertyItemSize(PropertyTagFrameDelay);
+				g_gif.m_p_item = (Gdiplus::PropertyItem *)malloc(total_buffer);
+				g_gif.m_p_image->GetPropertyItem(PropertyTagFrameDelay, total_buffer, g_gif.m_p_item);
+
+				g_gif.m_current_frame = 0;
+				GUID guid = Gdiplus::FrameDimensionTime;
+				g_gif.m_p_image->SelectActiveFrame(&guid, g_gif.m_current_frame);
+
+				SetTimer(g_gif_hwnd, TIMER_GIF, ((UINT *)g_gif.m_p_item[0].value)[g_gif.m_current_frame] * 1000, NULL);
+				++g_gif.m_current_frame;
+				RECT gif_rect;
+				GetClientRect(g_gif_hwnd, &gif_rect);
+				InvalidateRect(g_gif_hwnd, &gif_rect, TRUE);
+			}
 		}
 		break;
 	}
