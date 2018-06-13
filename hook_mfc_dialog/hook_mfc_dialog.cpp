@@ -5,6 +5,7 @@
 #include "hook_mfc_dialog.h"
 #include <GdiPlus.h>
 #include "transparent_button.h"
+#include "CWMPPlayer4.h"
 
 #pragma comment(lib, "GdiPlus.lib")
 
@@ -78,6 +79,8 @@ HWND g_gif_hwnd;
 
 #define IDC_STATIC_GIF 0x3e8
 #define TIMER_GIF 1
+
+CWMPPlayer4 *g_wmp;
 
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
@@ -720,6 +723,9 @@ LRESULT CALLBACK new_proc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 	{
 		OutputDebugString(L"new_proc WM_DESTROY");
 		KillTimer(g_gif_hwnd, TIMER_GIF);
+
+		if (g_wmp)
+			delete g_wmp;
 	}
 
 	return CallWindowProc(g_old_proc, hWnd, Msg, wParam, lParam);
@@ -888,6 +894,18 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 				GetClientRect(g_gif_hwnd, &gif_rect);
 				InvalidateRect(g_gif_hwnd, &gif_rect, TRUE);
 			}
+
+			// test mp4
+			g_wmp = new CWMPPlayer4;
+			RECT wmp_rect;
+			wmp_rect.left = 2;
+			wmp_rect.top = 2;
+			wmp_rect.right = 160;
+			wmp_rect.bottom = 160;
+
+			g_wmp->Create(NULL, WS_CHILD | WS_VISIBLE, wmp_rect, CWnd::FromHandle(hwnd), 0x444, NULL);
+			g_wmp->put_uiMode(L"none");
+			g_wmp->put_URL(L"D:\\test.mp4");
 		}
 		break;
 	}

@@ -103,6 +103,7 @@
     <None Include="splash.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CWMPPlayer4.cpp" />
     <ClCompile Include="hook_mfc_dialog.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -111,6 +112,7 @@
     <ClCompile Include="transparent_button.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CWMPPlayer4.h" />
     <ClInclude Include="hook_mfc_dialog.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -123,4 +125,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties _x007B_6BF52A52-394A-11D3-B153-00C04F79FAA6_x007D_="CWMPPlayer4" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
