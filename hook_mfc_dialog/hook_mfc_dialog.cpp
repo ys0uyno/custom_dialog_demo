@@ -6,6 +6,7 @@
 #include <GdiPlus.h>
 #include "transparent_button.h"
 #include "CWMPPlayer4.h"
+#include "WndShadow.h"
 
 #pragma comment(lib, "GdiPlus.lib")
 
@@ -81,6 +82,8 @@ HWND g_gif_hwnd;
 #define TIMER_GIF 1
 
 CWMPPlayer4 *g_wmp;
+
+CWndShadow g_wnd_shadow;
 
 //
 //TODO: If this DLL is dynamically linked against the MFC DLLs,
@@ -906,6 +909,16 @@ LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam,LPARAM lParam)
 			g_wmp->Create(NULL, WS_CHILD | WS_VISIBLE, wmp_rect, CWnd::FromHandle(hwnd), 0x444, NULL);
 			g_wmp->put_uiMode(L"none");
 			g_wmp->put_URL(L"D:\\test.mp4");
+
+			// shadow window
+			CWndShadow::Initialize(AfxGetInstanceHandle());
+
+			g_wnd_shadow.Create(g_hwnd);
+			g_wnd_shadow.SetSize(8);
+			g_wnd_shadow.SetPosition(0, 0);
+
+			COLORREF colorref = RGB(0, 173, 239);
+			g_wnd_shadow.SetColor(colorref);
 		}
 		break;
 	}
